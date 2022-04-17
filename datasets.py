@@ -1,14 +1,19 @@
 from torch.utils.data import Dataset
 import gzip
 import ast
+import csv
 
 import config
 from utils import *
 
 
-class AmazonReviewDataset(Dataset):
-    def __init__(self, filename):
-        self.train_data, self.train_label = AmazonReviewDataset.parse(filename)
+class SentimentDataset(Dataset):
+    def __init__(self, filename, size=-1):
+        self.filename = filename
+        self.train_data, self.train_label = self.parse()
+        if size != -1:
+            self.train_data = self.train_data[:size]
+            self.train_label = self.train_label[:size]
         self.vocabulary, self.idx2word = get_vocabulary(self.train_data, start_idx=1)
         self.vocabulary[config.PAD] = 0
 
@@ -22,15 +27,19 @@ class AmazonReviewDataset(Dataset):
         self.train_label = sentence_to_idx(self.train_label, self.labels)
         self.train_label = one_hot(self.train_label, self.labels)
 
+    def parse(self):
+        return None, None
+
     def __len__(self):
         return len(self.train_data)
 
     def __getitem__(self, item):
         return self.train_data[item], self.train_label[item][0]
 
-    @staticmethod
-    def parse(path):
-        reviews = gzip.open(path, 'r')
+
+class AmazonReviewDataset(SentimentDataset):
+    def parse(self):
+        reviews = gzip.open(self.filename, 'r')
         x = []
         y = []
         for review in reviews:
@@ -40,8 +49,18 @@ class AmazonReviewDataset(Dataset):
             data = ast.literal_eval(review)
             if 'reviewText' not in data:
                 continue
-            text = data['reviewText'].split()
-            text = [word.lower() for word in text]
-            x.append(text)
+            x.append(data['reviewText'].lower().split())
             y.append([data['overall']])
+        return x, y
+
+
+class Hw1Dataset(SentimentDataset):
+    def parse(self):
+        x = []
+        y = []
+        with open(self.filename, newline='') as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                x.append(row['text'].lower().split())
+                y.append([row['emotions']])
         return x, y

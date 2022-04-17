@@ -9,8 +9,7 @@ from models import *
 from training import *
 
 
-def train_nbow_amazon():
-    ds = AmazonReviewDataset('./data/AMAZON_FASHION_5.json.gz')
+def train_sentiment(ds):
     ds_train, ds_val = split_dataset(ds, ratio=0.9)
     train_loader = DataLoader(ds_train, batch_size=config.BATCH_SIZE)
     val_loader = DataLoader(ds_val, batch_size=config.BATCH_SIZE)
@@ -25,4 +24,5 @@ def train_nbow_amazon():
 
 
 if __name__ == '__main__':
-    train_nbow_amazon()
+    ds = Hw1Dataset('./data/hw1_sentiment.csv', size=500)
+    train_sentiment(ds)
