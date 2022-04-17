@@ -1,4 +1,6 @@
 import torch
+from torch.utils.data import random_split
+import torch.nn.functional as F
 
 
 def get_vocabulary(data, start_idx=1):
@@ -22,3 +24,19 @@ def sentence_to_idx(data, vocabulary):
             row.append(vocabulary[word])
         idx.append(row)
     return torch.tensor(idx)
+
+
+def one_hot(data, vocabulary):
+    ret = []
+    for sentence in data:
+        row = []
+        for label in sentence:
+            row.append(F.one_hot(label, num_classes=len(vocabulary)).type(torch.float32))
+        ret.append(row)
+    return ret
+
+
+def split_dataset(ds, ratio=0.9):
+    n = len(ds)
+    front_size = int(n * ratio)
+    return random_split(ds, [front_size, n - front_size])

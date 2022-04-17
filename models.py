@@ -15,6 +15,9 @@ class NBoW(nn.Module):
         self.net = nn.Sequential(*layers)
 
     def forward(self, x):
+        # x: (batch_size, sentence_length)
         x = self.embedding(x)
+        # x: (batch_size, sentence_length, embedding_size)
         x = x.mean(dim=1)
-        return self.net(x)
+        # x: (batch_size, embedding_size)
+        return self.net(x)  # (batch_size, output_size)
