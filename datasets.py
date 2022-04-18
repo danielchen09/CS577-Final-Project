@@ -5,17 +5,22 @@ import csv
 
 import config
 from utils import *
+from augmentations import augment_sentences
 
 
 class SentimentDataset(Dataset):
-    def __init__(self, filename, size=-1):
+    def __init__(self, filename, size=-1, augmentations=None):
+        if augmentations is None:
+            augmentations = []
         self.filename = filename
         self.train_data, self.train_label = self.parse()
         if size != -1:
             self.train_data = self.train_data[:size]
             self.train_label = self.train_label[:size]
+        augment_sentences(self.train_data, self.train_label, augmentations)
         self.vocabulary, self.idx2word = get_vocabulary(self.train_data, start_idx=1)
         self.vocabulary[config.PAD] = 0
+        self.idx2word[0] = config.PAD
 
         max_len = max([len(x) for x in self.train_data])
         for i in range(len(self.train_data)):
