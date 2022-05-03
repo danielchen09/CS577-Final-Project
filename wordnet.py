@@ -1,5 +1,6 @@
 import random
 import subprocess
+import re
 
 
 class WordNet:
@@ -16,7 +17,13 @@ class WordNet:
         return syns[r]
 
     def get_synonyms(self, word):
-        return self._get_sense(word, 1)
+        syns = self._get_sense(word, 1)
+        s = []
+        for synonym in syns:
+            synonym = re.sub('\(.*\)', '', synonym).strip()
+            if synonym != word:
+                s.append(synonym)
+        return s
 
     def _get_sense(self, word, sense):
         subp_out = self._call_subprocess(word, '-synsa').split('\r\n')

@@ -10,11 +10,10 @@ from training import *
 from augmentations import *
 
 
-def train_sentiment(ds):
-    ds_train, ds_val = split_dataset(ds, ratio=0.9)
+def train_sentiment(ds_train, ds_val):
     train_loader = DataLoader(ds_train, batch_size=config.BATCH_SIZE)
-    val_loader = DataLoader(ds_val, batch_size=config.BATCH_SIZE)
-    model = LSTMModel(len(ds.vocabulary), config.EMBEDDING_DIM, len(ds.labels)).to(config.DEVICE)
+    val_loader = DataLoader(ds_val, batch_size=len(ds_val))
+    model = LSTMModel(len(ds_train.vocabulary), config.EMBEDDING_DIM, len(ds_train.labels)).to(config.DEVICE)
     optimizer = Adam(model.parameters(), lr=config.LEARNING_RATE)
     loss_fn = nn.CrossEntropyLoss()
 
@@ -24,6 +23,24 @@ def train_sentiment(ds):
     train(config.TRAIN_EPOCHS, model, optimizer, train_loader, val_loader, loss_fn, metric_fn)
 
 
+def dataset_creator(ds_class, path):
+    def create_dataset(*args, **kwargs):
+        return ds_class(path, *args, **kwargs)
+    return create_dataset
+
+
+def main():
+    create_dataset = dataset_creator(Hw1Dataset, './data/hw1_sentiment.csv')
+
+    ds = create_dataset()
+
+    augmentations = [] # easyaug: 0.1667
+
+    train_idx, val_idx = split_indices(ds, 0.9)
+    ds_train = create_dataset(vocabulary_set=ds.get_vocabulary_set(), subset=train_idx, augmentations=augmentations)
+    ds_val = create_dataset(vocabulary_set=ds.get_vocabulary_set(), subset=val_idx)
+    train_sentiment(ds_train, ds_val)
+
+
 if __name__ == '__main__':
-    ds = Hw1Dataset('./data/hw1_sentiment.csv', size=500, augmentations=[EasyAug()])
-    train_sentiment(ds)
+    main()
