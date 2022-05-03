@@ -27,18 +27,14 @@ class SentimentDataset(Dataset):
         else:
             self.vocabulary, self.idx2word = vocabulary_set
 
-        # augment_sentences(self.train_data, self.train_label, self.augmentations)
-
-        max_len = max([len(x) for x in self.train_data])
-        for i in range(len(self.train_data)):
-            for _ in range(max_len - len(self.train_data[i])):
-                self.train_data[i].append(config.PAD)
+        self.train_data, self.train_label, augment_sentences(self.train_data, self.train_label, self.augmentations)
+        self.train_data = pad_sentences(self.train_data)
 
         self.labels, self.idx2label = get_vocabulary(self.train_label, contains_na=False, use_wordnet=False)
 
-        # self.train_data = sentence_to_idx(self.train_data, self.vocabulary)
-        # self.train_label = sentence_to_idx(self.train_label, self.labels)
-        # self.train_label = one_hot(self.train_label, self.labels)
+        self.train_data = sentence_to_idx(self.train_data, self.vocabulary)
+        self.train_label = sentence_to_idx(self.train_label, self.labels)
+        self.train_label = one_hot(self.train_label, self.labels)
 
     def get_vocabulary_set(self):
         return self.vocabulary, self.idx2word
@@ -50,8 +46,7 @@ class SentimentDataset(Dataset):
         return len(self.train_data)
 
     def __getitem__(self, item):
-        return sentence_to_idx(self.train_data[item], self.vocabulary), \
-               one_hot(sentence_to_idx(self.train_label[item], self.labels), self.labels)[0]
+        return self.train_data[item], self.train_label[item][0]
 
 
 class AmazonReviewDataset(SentimentDataset):

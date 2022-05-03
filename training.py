@@ -19,9 +19,9 @@ def evaluate(model, loader, loss_fn, metric_fn):
 
 
 def train(epochs, model, optimizer, train_loader, val_loader, loss_fn, metric_fn):
-    for epoch in tqdm(range(epochs), desc='training progress'):
+    for epoch in range(epochs):
         model.train()
-        for x, y in train_loader:
+        for x, y in tqdm(train_loader, desc=f'epoch {epoch + 1}/{epochs}'):
             x, y = x.to(config.DEVICE), y.to(config.DEVICE)
             optimizer.zero_grad()
             y_pred = model(x)

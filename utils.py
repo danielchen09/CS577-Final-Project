@@ -39,14 +39,25 @@ def inverse_vocabulary(vocabulary):
     return {v: k for k, v in vocabulary.items()}
 
 
-def sentence_to_idx(sentence, vocabulary):
-    row = []
-    for word in sentence:
-        if word in vocabulary:
-            row.append(vocabulary[word])
-        else:
-            row.append(vocabulary[config.UNK])
-    return torch.tensor(row)
+def sentence_to_idx(data, vocabulary):
+    idx = []
+    for sentence in data:
+        row = []
+        for word in sentence:
+            if word in vocabulary:
+                row.append(vocabulary[word])
+            else:
+                row.append(vocabulary[config.UNK])
+        idx.append(row)
+    return torch.tensor(idx)
+
+
+def pad_sentences(sentences):
+    for i in range(len(sentences)):
+        for _ in range(config.MAX_SENT_LENGTH - len(sentences[i])):
+            sentences[i].append(config.PAD)
+        sentences[i] = sentences[i][:config.MAX_SENT_LENGTH]
+    return sentences
 
 
 def idx_to_sentence(data, idx2word):
@@ -59,11 +70,14 @@ def idx_to_sentence(data, idx2word):
     return sentences
 
 
-def one_hot(sentence, vocabulary):
-    row = []
-    for label in sentence:
-        row.append(F.one_hot(label, num_classes=len(vocabulary)).type(torch.float32))
-    return row
+def one_hot(data, vocabulary):
+    ret = []
+    for sentence in data:
+        row = []
+        for label in sentence:
+            row.append(F.one_hot(label, num_classes=len(vocabulary)).type(torch.float32))
+        ret.append(row)
+    return ret
 
 
 def split_indices(ds, ratio=0.9):

@@ -1,6 +1,7 @@
 import random
 
 from torch.utils.data import Dataset
+from deep_translator import GoogleTranslator
 
 from utils import *
 import config
@@ -27,6 +28,23 @@ class Compose(Augmentation):
         for augmentation in self.augmentations:
             x = augmentation(x)
         return x
+
+
+class BackTranslation(Augmentation):
+    def __init__(self, language='ja'):
+        super(BackTranslation, self).__init__()
+        self.language = language
+        self.forward_translator = GoogleTranslator(source='en', target=self.language)
+        self.backward_translator = GoogleTranslator(source=self.language, target='en')
+
+    def forward(self, x):
+        x = ' '.join(x)
+        x = self.backward_translator.translate(self.forward_translator.translate(x))
+        x = x.lower()
+        x = x.replace("'", ' ')
+        x = x.replace('.', '')
+        x = x.replace(',', '')
+        return x.split(' ')
 
 
 class EasyAug(Augmentation):
@@ -60,7 +78,7 @@ class EasyAug(Augmentation):
     def ri(self, x):
         idxs = self.sample_indices(x)
         syns = [config.wordnet.get_random_synonym(x[i]) for i in idxs]
-        for i in range(self.n):
+        for i in range(3):
             r = random.randint(0, len(x))
             x.insert(r, syns[min(i, len(syns) - 1)])
         return x
@@ -82,14 +100,15 @@ class EasyAug(Augmentation):
         return random.sample(idxs, k=self.n)
 
 
-def augment_sentences(sentences, labels, augmentation, n=-1):
+def augment_sentences(sentences, labels, augmentation, overwrite=False):
     if isinstance(augmentation, list):
         if len(augmentation) == 0:
-            return
+            return sentences, labels
         augmentation = Compose(augmentation)
-    if n == -1:
-        n = len(sentences)
-    idxs = random.sample(range(len(sentences)), n)
-    for i in range(n):
-        sentences.append(augmentation(sentences[idxs[i]]))
-        labels.append(labels[idxs[i]])
+    n = len(sentences)
+    for i in tqdm(range(n), desc='augmenting'):
+        sentences.append(augmentation(sentences[i]))
+        labels.append(labels[i])
+    if overwrite:
+        return sentences[n:], labels[n:]
+    return sentences, labels
