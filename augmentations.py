@@ -2,6 +2,8 @@ import random
 
 from torch.utils.data import Dataset
 from deep_translator import GoogleTranslator
+from transformers import pipeline, GPT2TokenizerFast
+import os
 
 from utils import *
 import config
@@ -40,11 +42,25 @@ class BackTranslation(Augmentation):
     def forward(self, x):
         x = ' '.join(x)
         x = self.backward_translator.translate(self.forward_translator.translate(x))
-        x = x.lower()
-        x = x.replace("'", ' ')
-        x = x.replace('.', '')
-        x = x.replace(',', '')
-        return x.split(' ')
+
+        return clean_sentence(x)
+
+
+class Generation(Augmentation):
+    def __init__(self, length=10):
+        super(Generation, self).__init__()
+        self.length = length
+        if os.path.exists(config.GENERATOR_PATH):
+            self.generator = load_pickle(config.GENERATOR_PATH)
+        else:
+            self.generator = pipeline('text-generation', model='gpt2')
+        self.tokenizer = GPT2TokenizerFast.from_pretrained("gpt2")
+
+    def forward(self, x):
+        output_length = len(x) + self.length
+        x = ' '.join(x)
+        x = self.generator(x, max_length=output_length, pad_token_id=self.tokenizer.eos_token_id)[0]['generated_text']
+        return clean_sentence(x)
 
 
 class EasyAug(Augmentation):
@@ -112,3 +128,13 @@ def augment_sentences(sentences, labels, augmentation, overwrite=False):
     if overwrite:
         return sentences[n:], labels[n:]
     return sentences, labels
+
+
+def clean_sentence(sentence):
+    # sentence: string
+    sentence = sentence.lower()
+    sentence = sentence.replace("'", ' ')
+    sentence = sentence.replace('.', '')
+    sentence = sentence.replace(',', '')
+    return sentence.split(' ')
+

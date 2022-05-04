@@ -15,5 +15,6 @@ EMBEDDING_DIM = 300
 
 LOAD_VOCAB = True
 VOCAB_PATH = 'voc_set.pickle'
+GENERATOR_PATH = 'gpt2-generator.pickle'
 
 wordnet = WordNet()
