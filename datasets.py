@@ -28,6 +28,7 @@ class SentimentDataset(Dataset):
             self.vocabulary, self.idx2word = vocabulary_set
 
         self.train_data, self.train_label, augment_sentences(self.train_data, self.train_label, self.augmentations)
+
         self.train_data = pad_sentences(self.train_data)
 
         self.labels, self.idx2label = get_vocabulary(self.train_label, contains_na=False, use_wordnet=False)

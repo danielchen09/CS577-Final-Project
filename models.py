@@ -8,7 +8,8 @@ class NBoW(nn.Module):
     def __init__(self, vocab_size, embedding_dim, output_dim, hidden_dims=None, padding_idx=0):
         super(NBoW, self).__init__()
         if hidden_dims is None:
-            hidden_dims = [output_dim]
+            hidden_dims = []
+        hidden_dims.append(output_dim)
 
         self.embedding = nn.Embedding(vocab_size, embedding_dim, padding_idx=padding_idx)
         layers = [nn.Linear(embedding_dim, hidden_dims[0])]
@@ -37,7 +38,8 @@ class LSTMModel(nn.Module):
         self.bidirectional = bidirectional
 
         if hidden_dims is None:
-            hidden_dims = [output_dim]
+            hidden_dims = []
+        hidden_dims.append(output_dim)
 
         self.embedding = nn.Embedding(vocab_size, embedding_dim, padding_idx=padding_idx)
         self.lstm = nn.LSTM(embedding_dim, lstm_hidden_dims, lstm_layers, bidirectional=bidirectional, batch_first=True, dropout=config.DROPOUT)
@@ -51,9 +53,9 @@ class LSTMModel(nn.Module):
         # x = (batch_size, sentence_length)
         x = self.embedding(x)
         # x = (batch_size, sentence_length, embedding_size)
-        _, (x, _) = self.lstm(x)
-        if self.bidirectional:
-            x = torch.cat([x[-1], x[-2]], dim=-1)
-        else:
-            x = x[-1]
-        return self.net(x)
+        x, (z, _) = self.lstm(x)
+        # if self.bidirectional:
+        #     x = torch.cat([x[-1], x[-2]], dim=-1)
+        # else:
+        #     x = x[-1]
+        return self.net(x[:, -1, :])

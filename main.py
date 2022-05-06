@@ -30,30 +30,16 @@ def dataset_creator(ds_class, path):
 
 
 def main():
-    create_dataset = dataset_creator(Hw1Dataset, './data/hw1_sentiment.csv')
+    create_dataset = dataset_creator(AmazonReviewDataset, './data/AMAZON_FASHION_5.json.gz')
 
     ds = create_dataset()
 
-    augmentations = [Generation()] # easyaug: 0.1667
+    augmentations = [BackTranslation()] # easyaug: 0.1667
 
-    train_idx, val_idx = split_indices(ds, 0.9)
+    train_idx, val_idx = split_indices(ds, 0.75)
     ds_train = create_dataset(vocabulary_set=ds.get_vocabulary_set(), subset=train_idx, augmentations=augmentations)
     ds_val = create_dataset(vocabulary_set=ds.get_vocabulary_set(), subset=val_idx)
     train_sentiment(ds_train, ds_val)
-
-
-def test():
-    create_dataset = dataset_creator(Hw1Dataset, './data/hw1_sentiment.csv')
-
-    ds = create_dataset()
-
-    augmentations = [Generation()]  # easyaug: 0.1667
-
-    i = 5
-    with_aug = create_dataset(vocabulary_set=ds.get_vocabulary_set(), subset=(i, i + 1), augmentations=augmentations)
-    no_aug = create_dataset(vocabulary_set=ds.get_vocabulary_set(), subset=(i, i + 1))
-    print(idx_to_sentence(no_aug[0], ds.idx2word))
-    print(idx_to_sentence(with_aug[1], ds.idx2word))
 
 
 if __name__ == '__main__':

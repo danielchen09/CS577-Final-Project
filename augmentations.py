@@ -117,16 +117,23 @@ class EasyAug(Augmentation):
 
 
 def augment_sentences(sentences, labels, augmentation, overwrite=False):
+
     if isinstance(augmentation, list):
         if len(augmentation) == 0:
             return sentences, labels
         augmentation = Compose(augmentation)
+
+    if os.path.exists(config.DATASET_PATH):
+        print('loading dataset ' + config.DATASET_PATH)
+        return load_pickle(config.DATASET_PATH)
+
     n = len(sentences)
     for i in tqdm(range(n), desc='augmenting'):
         sentences.append(augmentation(sentences[i]))
         labels.append(labels[i])
     if overwrite:
         return sentences[n:], labels[n:]
+    save_pickle((sentences, labels), config.DATASET_PATH)
     return sentences, labels
 
 
